@@ -59,6 +59,11 @@ fid3_dn <- matrix(c(255,242,219,255,248,219,255,249,216, # Red
                      255,241,235,255,244,241,255,243,239) # Green
                    ,nrow = 3)
 
+fid4_dn <- matrix(c(255,242,224,255,251,225,255,238,200, # Red
+                    255,250,228,255,241,221,255,243,201, # Blue
+                    255,230,207,255,232,203,255,206,169) # Green
+                  ,nrow = 3)
+
 
 # Load functions ---------------------------------------------------------------
 
@@ -176,12 +181,13 @@ fid1_coord <-fid.coord(fid1_dn,top_left)
 top_left <- c(pix_coord$px_x[2],pix_coord$px_y[2])
 fid2_coord <- fid.coord(fid2_dn,top_left)
 
-
 # Fiducial 3:
 top_left <- c(pix_coord$px_x[3],pix_coord$px_y[3])
 fid3_coord <- fid.coord(fid3_dn,top_left)
 
-
+# Fiducial 4:
+top_left <- c(pix_coord$px_x[4],pix_coord$px_y[4])
+fid4_coord <- fid.coord(fid4_dn,c(0,0))
 
 
 

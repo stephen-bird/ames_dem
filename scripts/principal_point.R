@@ -13,6 +13,10 @@ source("scripts/pp_functions.R")
 # Sub_x = x coordinate, sub_y = y coordinate
 # Px = units of pixels, mm = units of millimeters
 
+
+image_no <- c("bcc04050_041")
+cal_focal <- 153.228 # Calibrated focal length in mm
+
 # Enter the number of pixels to the fiducial mark and the film coordinates for
 # the same mark in mm. Use a pixel/image coordinate system for the pixels (0,0
 # at top left). Note that the pixel coordinate will later be refined...at this
@@ -24,9 +28,9 @@ meas_coord <-
                 # Fiducial number
                 fid = c(1, 2, 3, 4),
                 # x-coordinate in pixels
-                px_x = c(15942, 801, 15946, 798),
+                px_x = c(15943, 801, 15947, 798),
                 # y-coordinate in pixels
-                px_y = c(15985, 836, 840, 15978),
+                px_y = c(15985, 836, 839, 15978),
                 # x-coordinate in mm
                 mm_x = c(-105.993, 106.001,-106.015, 106.015),
                 # y-coordinate in mm
@@ -36,7 +40,7 @@ meas_coord <-
 image_dimensions <- c(16730,16816) # Width and hieght in units of pixels
 ipp_cal <- c(-.003,-.009) # Indicated principal point in mm
 ppa_cal <- c(0,0) # Principal point of autocollimination
-pp_cal <- c(0.000,0.007) # Calibrated principal point
+cpp_cal <- c(0.000,0.007) # Calibrated principal point
 
 # Enter the distance between fiducails in mm:
 dist2fid_mm <-
@@ -46,7 +50,8 @@ dist2fid_mm <-
                 dist_mm = c(299.814, 211.988, 212.015, 212.008, 212.007, 299.826)
         )
 
-# Enter the error in the film measurements as stated in the report. If none is given, estimate a reasonable value:
+# Enter the error in the film measurements as stated in the report. If none is
+# given, estimate a reasonable value:
 dist_err <- 0.003 # Stated error between two points
 point_err <- sqrt((dist_err ^ 2) / 2) # Error of placing a single point
 
@@ -55,40 +60,48 @@ fid_angle <- 90 + 13 / 3600
 
 # Enter the DN's for each pixel in a 9x9 window centered at the pixel at the
 # percieved center of the fiducial. Start in the top right position in the
-# matrix (assuming we're viewing the image from the focal plane). If the image is in RGB, do all three channels before moving to the
-# next cell.
-fid4_dn <- matrix(c(255,249,222,253,252,231,255,250,224, # Row 1, rgb,rgb,...
-                    255,255,234,255,255,243,255,251,228, # Row 2
-                    255,250,223,255,255,234,255,250,220) # Row 3
+# matrix (assuming we're viewing the image from the focal plane). If the image
+# is in RGB, do all three channels before moving to the next cell. Filter the
+# fiducial by Outliers, Despekle, and Gaussian Blur using the Fiji tool.
+fid1_dn <- matrix(c(106,74,65,111,77,67,101,68,59, # Row 1, rgb,rgb,...
+                    108,77,66,113,80,69,102,71,60, # Row 2
+                    95,67,57,99,70,60,90,62,52) # Row 3
                    ,nrow = 3)
 
-fid3_dn <- matrix(c(255,248,212,255,252,230,255,255,233, # Row 1
-                    255,241,204,255,252,238,248,246,231, # Row 2
-                    255,232,201,255,246,230,255,246,228) # Row 3
+fid2_dn <- matrix(c(127,84,74,141,97,85,139,95,81, # Row 1
+                    138,94,83,154,107,95,151,104,91, # Row 2
+                    133,88,78,148,101,89,146,97,86) # Row 3
                   ,nrow = 3)
 
-fid2_dn <- matrix(c(255,242,219,255,248,219,255,249,216, # Row 1
-                    255,245,236,255,253,246,255,245,236, # Row 2
-                    255,241,235,255,244,241,255,243,239) # Row 3
+fid3_dn <- matrix(c(188,123,102,188,125,102,174,110,88, # Row 1
+                    194,134,112,195,137,113,180,120,98, # Row 2
+                    187,128,107,187,130,108,174,114,93) # Row 3
                    ,nrow = 3)
 
-fid1_dn <- matrix(c(255,216,198,255,242,224,255,251,225, # Row 1
-                    255,219,200,255,250,228,255,251,221, # Row 2238
-                    235,184,165,255,230,207,255,232,203) # Row 32
+fid4_dn <- matrix(c(181,123,104,185,129,108,174,118,96, # Row 1
+                    193,135,114,197,142,118,185,129,105, # Row 2
+                    190,129,108,193,135,112,181,123,99) # Row 33
                   ,nrow = 3)
 
 
 # Find the coordinates of the fiducial points on the film ----------------------
 
-fid_film <- select(meas_coord,mm_x,mm_y)
-names(fid_film) <- c("x","y") # Column names much be in this form
-fid_film$x_err <- rep(point_err,4)
-fid_film$y_err <- rep(point_err,4)
-film_fids <- fiducial.samples(fid_film,1000000)
-film_fids$m <- 180 - intersect.angle(film_fids[,1:8])
-intersect_mean <- mean(film_fids$m) # Intersecting angle between fiducial lines derived from the random sample
-intersect_err <- sd(film_fids$m) # Error in the two intersecting fiducial lines derived from the random sample
-ifelse(abs(intersect_mean - fid_angle) <= intersect_err,"Good result -- the measured angle is within one standard deviation of the mean angle.","Poor result -- the measured angle is greater than one standard deviation of the mean angle.")
+fid_film <- select(meas_coord, mm_x, mm_y)
+names(fid_film) <- c("x", "y") # Column names much be in this form
+fid_film$x_err <- rep(point_err, 4)
+fid_film$y_err <- rep(point_err, 4)
+film_fids <- fiducial.samples(fid_film, 1000000)
+film_fids$m <- 180 - intersect.angle(film_fids[, 1:8])
+# Intersecting angle between fiducial lines derived from the random sample"
+intersect_mean <- mean(film_fids$m)
+# Error in the two intersecting fiducial lines derived from the random sample:
+intersect_err <- sd(film_fids$m)
+ifelse(
+        abs(intersect_mean - fid_angle) <= intersect_err,
+        "Good result -- the measured angle is within one standard deviation of the mean angle.",
+        "Poor result -- the measured angle is greater than one standard deviation of the mean angle."
+)
+
 
 # Find the coordinates of the fiducial points on the image ---------------------
 
@@ -113,7 +126,8 @@ fid_sub <- rbind(fid1_sub,fid2_sub,fid3_sub,fid4_sub)
 fid_sub <- as.data.frame(fid_sub)
 print(fid_sub)
 
-# Generate normal random samples of the sub-pixel fiducial location based on the sub-pixel estimate and the uncertainty:
+# Generate normal random samples of the sub-pixel fiducial location based on the
+# sub-pixel estimate and the uncertainty:
 image_fids <- fiducial.samples(fid_sub,1000000)
 image_fids$m <- 180 - intersect.angle(image_fids[,1:8])
 
@@ -142,6 +156,8 @@ w <- apply(select(image_fids,w), 2, sum)
 mean_res <- mean_w / w # This is the best estimate of the pixel resolution for this image
 sd_res <- 1 / sqrt(w) # This is the uncertainty in the best estimate of the pixel resolution for this image
 
+
+# Fit the coordinates by minimizing the sum of squares -------------------------
 
 # Translate the film distance between fiducials from mm to pixels based on the
 # mean image resolution:
@@ -195,17 +211,13 @@ colnames(fid_fity) <- c("measured","derived") # Rename columns
 fid_fity <- as.data.frame(fid_fity)
 y_trans <- optimize(min.x,c(-1,1),data = fid_fity)
 fid_fity$trans <- fid_fity$derived - y_trans$minimum
-
-fid_cal <- data.frame(x = fid_fitx$trans,y = fid_fity$trans) # Final calibrated fiducial mark coordinates (units of pixels)
-
+# Final calibrated fiducial mark coordinates (units of pixels):
+fid_cal <- data.frame(x = fid_fitx$trans,y = fid_fity$trans) 
 rms_imagefids <- rms.calc(fid_cal,fid_sub[,1:2])
 print(rms_imagefids)
 
 
-intersect.angle(fid_cal)
-
-
-# Find the indicated principal point (i.e. where the fiducials intersect):
+# Find the indicated principal point (i.e. where the fiducials intersect) ------
 
 # Slope and intercept of line 1 - 2
 rise1 <- fid_cal$y[1] - fid_cal$y[2]
@@ -220,15 +232,23 @@ slope2 <- rise2/run2
 inter2 <- fid_cal$y[3] - slope2 * fid_cal$x[3]
 
 # Intersection point or "indicated principal point":
+
+icent <- image_dimensions/2 # Find the center pixel of the image
 ipp <- line.sect(slope1,slope2,inter1,inter2) # In an image coordinate system with (0,0) at top left
+icent2ipp <- icent - ipp # This is the location of the IPP relative to the image center
+icent2ipp[1] <- -1 * icent2ipp[1] # Change the sign of the x-coord since the origin is now in the image center with the y-axis point up
+ipp2ppa <- icent2ipp - ipp_cal / mean_res # PPA relative to the image center
+ppa2cpp <- ipp2ppa + cpp_cal / mean_res # Calibrated principal point
+image_1 <- list(image_no,ppa2cpp,mean_res,sd_res,cal_focal) # Gather the results
+print(image_1)
 
-image_cent <- image_dimensions/2 # Find the center pixel of the image
-
-image_offset <- ipp - image_cent # Translation of x and y coordinates to match fiducials. THis is the location of the IPP relative to the image center
-image_offset[2] <- -1 * image_offset[2] # Change the sign so that origina is at 0,0, and point up(?)
-
-image_offset
 
 
-ppa_cal * mean_res
-pp_cal
+
+
+
+
+
+
+
+

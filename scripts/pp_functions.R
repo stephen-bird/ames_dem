@@ -2,7 +2,7 @@
 # Load functions ---------------------------------------------------------------
 
 
-# 1. Function to calculate the hypotonuse based on xy coordinates of two points:
+# 1. Function to calculate the hypotenuse based on xy coordinates of two points:
 hypo <- function(x1, y1, x2, y2) {
         sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
 }
@@ -11,7 +11,7 @@ hypo <- function(x1, y1, x2, y2) {
 # 2 Function to generate a sample of coordinates for each fiducial mark based on the measurement error:
 fiducial.samples <- function(fid_coord,n) {
         # Generate samples based on the fiducial mark uncertainty. Generate normal
-        # random samples (n = 10,000) for each sub-pixel estimatation of the image
+        # random samples (n = 10,000) for each sub-pixel estimation of the image
         # fiducial center by x and y coordinate.
         set.seed(42)
         x1 <- rnorm(n, mean = fid_coord$x[1], sd = fid_coord$x_err[1])
@@ -23,7 +23,7 @@ fiducial.samples <- function(fid_coord,n) {
         y3 <- rnorm(n, mean = fid_coord$y[3], sd = fid_coord$y_err[3])
         y4 <- rnorm(n, mean = fid_coord$y[4], sd = fid_coord$y_err[4])
         
-        # Calcualte the distance between fiducials based on the 10,000 random sample of
+        # Calculate the distance between fiducials based on the 10,000 random sample of
         # x,y coordinates:
         dist_12 <- hypo(x1,y1,x2,y2)
         dist_13 <- hypo(x1,y1,x3,y3)
@@ -39,7 +39,7 @@ fiducial.samples <- function(fid_coord,n) {
 }
 
 
-# 3. Function to calcualte the angle between crossing lines that connect fiducials based on the n random sample of
+# 3. Function to calculate the angle between crossing lines that connect fiducials based on the n random sample of
 # x,y coordinates:
 intersect.angle <- function(fid_pts){
         
@@ -79,7 +79,7 @@ mission.res <- function(fid1_pxy,fid2_pxy,fid3_pxy,fid4_pxy,film_coord,film_fids
         # the sub-pixel level and are within +/- 0.5 pixels to their true location.
         fid_sub <- rbind(fid1_sub,fid2_sub,fid3_sub,fid4_sub)
         fid_sub <- as.data.frame(fid_sub)
-        writeLines("\n") # Add a carrage return for readability of the ouput
+        writeLines("\n") # Add a carriage return for readability of the output
         print(fid_sub)
         
         # Generate normal random samples of the sub-pixel fiducial location based on the
@@ -99,19 +99,19 @@ mission.res <- function(fid1_pxy,fid2_pxy,fid3_pxy,fid4_pxy,film_coord,film_fids
         image_fids$res_24 <- film_fids$dist_24 / image_fids$dist_24
         image_fids$res_34 <- film_fids$dist_34 / image_fids$dist_34
         
-        # Calculate the mean resolution for each sample row and correspoinding standard
+        # Calculate the mean resolution for each sample row and corresponding standard
         # deviation. Select the smallest standard deviation as the best fit (i.e. the
-        # distnaces bewtween all fiducials is the ~same resolution):
+        # distances between all fiducials is the ~same resolution):
         image_fids$mean_res <- apply(select(image_fids,res_12,res_13,res_14,res_23,res_24,res_34), 1, mean)
         image_fids$sd_res <- apply(select(image_fids,res_12,res_13,res_14,res_23,res_24,res_34), 1, sd)
-        # Calculate the weighted average based on nucertainty:
+        # Calculate the weighted average based on uncertainty:
         image_fids$w <- 1 / image_fids$sd_res
         image_fids$mean_w <- image_fids$mean_res * image_fids$w
         mean_w <- apply(select(image_fids,mean_w), 2, sum)
         w <- apply(select(image_fids,w), 2, sum)
         mean_res <- mean_w / w # This is the best estimate of the pixel resolution for this image
         sd_res <- 1 / sqrt(w) # This is the uncertainty in the best estimate of the pixel resolution for this image
-        writeLines("\n") # Add a carrage return for readability of the ouput
+        writeLines("\n") # Add a carriage return for readability of the output
         print(mean_res)
         
         list(fid_sub,mean_res,sd_res)
@@ -119,7 +119,7 @@ mission.res <- function(fid1_pxy,fid2_pxy,fid3_pxy,fid4_pxy,film_coord,film_fids
 }
 
 
-# 5. Function to calculate the weigthed mean:
+# 5. Function to calculate the weighted mean:
 weighted.mean <- function(mean_res,sd_res){
         
         w <- 1/sd_res^2
@@ -142,7 +142,7 @@ resid.calc <- function(image_dist,film_pix_dist){
 }
 
 
-# 7. Fucntion to determine if a 9x9 matrix contains the maximum pixel value in the center of the matrix:
+# 7. Function to determine if a 9x9 matrix contains the maximum pixel value in the center of the matrix:
 subfid.mx <- function(channel,fid_dn){
         # This function takes a matrix of pixel DN's for each channel and returns a
         # matrix for a given channel (1 = red, 2 = blue, 3 = green).
@@ -154,7 +154,7 @@ subfid.mx <- function(channel,fid_dn){
 
 
 # 8. Function to calculate the sub-pixel center of a line made-up of three
-# points. Fucntion assumes the center coordinate is the middle: pa = dn at
+# points. Function assumes the center coordinate is the middle: pa = dn at
 # pixel 1; pb = dn at pixel 2; c = dn at pixel 3:
 sub.px <- function(pa,pb,pc) {
         
@@ -209,7 +209,7 @@ fid.coord <- function(fid_dn,meas_coord,fid_no){
 }
 
 
-# 11. Function to calucalte the RMSE between the image and film fiducuals:
+# 11. Function to calculate the RMSE between the image and film fiducials:
 rms.calc <- function(best_image_fids,best_film_fids){
         
         resid <- best_image_fids - best_film_fids
@@ -220,7 +220,7 @@ rms.calc <- function(best_image_fids,best_film_fids){
 }
 
 
-# 12. Function to minimize the shift between measured sub-pixel centers and those dervied from the distance between fiducials using a simple translation:
+# 12. Function to minimize the shift between measured sub-pixel centers and those derived from the distance between fiducials using a simple translation:
 min.x <- function(data, par) {
         
         with(data, abs(sum(
@@ -229,7 +229,7 @@ min.x <- function(data, par) {
 }
 
 
-# 13. Function to calcualte the angle between crossing lines that connect fiducials:
+# 13. Function to calculate the angle between crossing lines that connect fiducials:
 single.intersect.angle <- function(x1,y1,x2,y2,x3,y3,x4,y4){
         
         # Input includes 8 columns of data: columns 1:4 are the x coordinates of the fiducials, columns 5:8 are the corresponding y coordinates.
@@ -241,7 +241,7 @@ single.intersect.angle <- function(x1,y1,x2,y2,x3,y3,x4,y4){
 }
 
 
-# 14. Fucntion to rotate coordinates and  minimize the RMS error (field vs control data)
+# 14. Function to rotate coordinates and  minimize the RMS error (field vs control data)
 
 rot <- function(x,best_image_fids) {
         rotated_east <-
@@ -257,7 +257,7 @@ rot <- function(x,best_image_fids) {
 }
 
 
-# 15. Function to calcualte the RMS error between the 
+# 15. Function to calculate the RMS error between the 
 
 fid.rms <- function(adj){
         # Calculate the residuals:
@@ -305,7 +305,7 @@ fit.fids <- function(image,n){
         print(rms_fids) # RMS among fiducials in units of pixels
         
         
-        # Georeference the film coordinates to the image coordinatess
+        # Georeference the film coordinates to the image coordinates
         
         # First extract the best image fiducial coordinates:
         x_image_fids <- t(select(image_fids[best_row,],x1,x2,x3,x4))
@@ -323,7 +323,7 @@ fit.fids <- function(image,n){
         # Reflect the film coordinates across the y-axis since we're viewing the film from the back:
         film_coord$x <- film_coord$x * -1
         film_coord$y <- film_coord$y * -1
-        # Calcualte translation factor for the film coordinates so that Fid 1 on film = Fid 1 on the image:
+        # Calculate translation factor for the film coordinates so that Fid 1 on film = Fid 1 on the image:
         x_trans <- film_coord[1,1] - best_image_fids[1,1]
         y_trans <- film_coord[1,2] - best_image_fids[1,2]
         # Translate the fim coordinates
